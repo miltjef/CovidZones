@@ -5,7 +5,7 @@
 /*
 
 This script contains the logic that allows Covid-19 Widget to work. Please do not modify this file. You can add customizations in the widget script.
-Documentation is available at github.com/mzeryck/Weather-Cal
+Documentation is available at github.com/miltjef/CovidZones
 
 */
 
@@ -17,7 +17,7 @@ const CovidZones = {
     this.fm = iCloudInUse ? FileManager.iCloud() : FileManager.local()
     this.bgPath = this.fm.joinPath(this.fm.libraryDirectory(), "covidzones-" + this.name)
     this.prefPath = this.fm.joinPath(this.fm.libraryDirectory(), "covidzones-preferences-" + name)
-    this.widgetUrl = "https://raw.githubusercontent.com/miltjef/CovidZones/main/CovidZones-code.js"
+    this.widgetUrl = "https://raw.githubusercontent.com/miltjef/CovidZones/main/CovidCasesByZoneCode.js"
     this.now = new Date()
     this.data = {}
     this.initialized = true
@@ -452,7 +452,7 @@ const CovidZones = {
     // Shared values.
     this.locale = this.settings.widget.locale
     this.padding = parseInt(this.settings.widget.padding)
-    this.localization = this.settings.localization
+//    this.localization = this.settings.localization
     this.format = this.settings.font
     this.custom = custom
     this.darkMode = !(Color.dynamic(Color.white(),Color.black()).red)
@@ -771,16 +771,6 @@ const CovidZones = {
     }
   },
 
-  // Display a time-based greeting on the widget.
-  greeting(column) {
-
-    // This function makes a greeting based on the time of day.
-    function makeGreeting(hour, covid) {
-      return "Covid-19 Stats"
-    }
-    this.provideText(makeGreeting(this.now.getHours(), this.settings.covid), column, this.format.greeting, true)
-  },
-
   // Display COVID info on the widget.
   async covid(column) {
     if (!this.data.covid) { await this.setupCovid(this.settings.covid.Province.trim()) }
@@ -808,10 +798,12 @@ const CovidZones = {
 
     covidStack_nb.addSpacer(this.padding)
 	
+	var StrCovidData = this.settings.covid.covidtext.trim()
+	
 	this.provideText("Covid-19 Stats - " + this.data.covid.features[StrZone].attributes.ENGNAME.substring(7,25), column, this.format.greeting)
 	this.provideText("Last Updated: " + this.customDateToString(du)+"\n", column, this.format.greeting)
 	
-    this.provideText("Active Cases:"+(this.data.covid.features[StrZone].attributes.CurrentCaseCount-this.data.covid.features[StrZone].attributes.CurrentRecovered)+", "+this.localization.covid.replace(/{(.*?)}/g, (match, $1) => {
+    this.provideText("Active Cases:"+(this.data.covid.features[StrZone].attributes.CurrentCaseCount-this.data.covid.features[StrZone].attributes.CurrentRecovered)+", "+StrCovidData.replace(/{(.*?)}/g, (match, $1) => {
       let val = this.data.covid.features[StrZone].attributes[$1]
       if (val) val = new Intl.NumberFormat(this.locale.replace('_','-')).format(val)
       return val || ""})+", Population:" + new Intl.NumberFormat(this.locale.replace('_','-')).format(this.data.covid.features[StrZone].attributes.TotalPop2019) + ", Infected/K:" + new Intl.NumberFormat(this.locale.replace('_','-')).format(((this.data.covid.features[StrZone].attributes.CurrentCaseCount/(this.data.covid.features[StrZone].attributes.TotalPop2019/1000)))), column, this.format.covid)
@@ -838,9 +830,18 @@ const CovidZones = {
   },
   
   customDateToString(d) {
-        return `${d.getMonth()+1}/${d.getDate()}/${d.getFullYear()} ${d.getHours()}:${d.getMinutes()}`;
+		strHour = this.addZero(d.getHours())
+		strMin = this.addZero(d.getMinutes())
+        return `${d.getMonth()+1}/${d.getDate()}/${d.getFullYear()} ${strHour}:${strMin}`;
   },
-	  
+
+  addZero(i) {
+	if (i < 10) {
+		i = "0" + i
+	}
+  return i
+  },
+  
   // Returns a rounded number string or the provided dummy text.
   displayNumber(number,dummy = "-") { return (number == null ? dummy : Math.round(number).toString()) },
 
@@ -1028,61 +1029,7 @@ const CovidZones = {
           description: "Instantly switch to dark mode. \u26A0\uFE0F This DOES NOT support dark mode image backgrounds or custom icon tint settings. \u26A0\uFE0F",
         },
       },
-      localization: {
-        name: "Localization and text customization",
-        morningGreeting: {
-          val: "Good morning.",
-          name: "Morning greeting",
-        },
-        afternoonGreeting: {
-          val: "Good afternoon.",
-          name: "Afternoon greeting",
-        },
-        eveningGreeting: {
-          val: "Good evening.",
-          name: "Evening greeting",
-        },
-        nightGreeting: {
-          val: "Good night.",
-          name: "Night greeting",
-        },
-        nextHourLabel: {
-          val: "Next hour",
-          name: "Label for next hour of weather",
-        },
-        tomorrowLabel: {
-          val: "Tomorrow",
-          name: "Label for tomorrow",
-        },
-        noEventMessage: {
-          val: "Enjoy the rest of your day.",
-          name: "No event message",
-          description: "The message shown when there are no more events for the day, if that setting is active.",
-        },
-        noRemindersMessage: {
-          val: "Tasks complete.",
-          name: "No reminders message",
-          description: "The message shown when there are no more reminders for the day, if that setting is active.",
-        },
-        durationMinute: {
-          val: "m",
-          name: "Duration label for minutes",
-        },
-        durationHour: {
-          val: "h",
-          name: "Duration label for hours",
-        },
-        covid: {
-          val: "Cases:{CurrentCaseCount}, Deaths:{CurrentDeaths}, Recoveries:{CurrentRecovered}, Tests:{CurrentTests}",
-          name: "COVID data text",
-          description: "Each {token} is replaced with the number from the data. The available tokens are: cases, todayCases, deaths, todayDeaths, recovered, active, critical, casesPerOneMillion, deathsPerOneMillion, totalTests, testsPerOneMillion"
-        },
-        week: {
-          val: "Week",
-          name: "Label for the week number",
-        },
-      },
-      font: {
+	  font: {
         name: "Text sizes, colors, and fonts",
         defaultText: {
           val: { size: "14", color: "ffffff", dark: "", font: "regular", caps: "" },
@@ -1090,89 +1037,9 @@ const CovidZones = {
           description: "These settings apply to all text on the widget that doesn't have a customized value.",
           type: "fonts",
         },
-        smallDate:   {
-          val: { size: "17", color: "", dark: "", font: "semibold", caps: "" },
-          name: "Small date",
-          type: "fonts",
-        },
-        largeDate1:  {
-          val: { size: "30", color: "", dark: "", font: "light", caps: "" },
-          name: "Large date, line 1",
-          type: "fonts",
-        },
-        largeDate2:  {
-          val: { size: "30", color: "", dark: "", font: "light", caps: "" },
-          name: "Large date, line 2",
-          type: "fonts",
-        },
         greeting:    {
-          val: { size: "30", color: "", dark: "", font: "semibold", caps: "" },
+          val: { size: "18", color: "1aff05", dark: "1aff05", font: "semibold", caps: "" },
           name: "Greeting",
-          type: "fonts",
-        },
-        eventLabel:  {
-          val: { size: "14", color: "", dark: "", font: "semibold", caps: "" },
-          name: "Event heading (used for the TOMORROW label)",
-          type: "fonts",
-        },
-        eventTitle:  {
-          val: { size: "14", color: "", dark: "", font: "semibold", caps: "" },
-          name: "Event title",
-          type: "fonts",
-        },
-        eventLocation:   {
-          val: { size: "14", color: "", dark: "", font: "", caps: "" },
-          name: "Event location",
-          type: "fonts",
-        },
-        eventTime:   {
-          val: { size: "14", color: "ffffffcc", dark: "", font: "", caps: "" },
-          name: "Event time",
-          type: "fonts",
-        },
-        noEvents:    {
-          val: { size: "30", color: "", dark: "", font: "semibold", caps: "" },
-          name: "No events message",
-          type: "fonts",
-        },
-        reminderTitle:  {
-          val: { size: "14", color: "", dark: "", font: "", caps: "" },
-          name: "Reminder title",
-          type: "fonts",
-        },
-        reminderTime:   {
-          val: { size: "14", color: "ffffffcc", dark: "", font: "", caps: "" },
-          name: "Reminder time",
-          type: "fonts",
-        },
-        noReminders:    {
-          val: { size: "30", color: "", dark: "", font: "semibold", caps: "" },
-          name: "No reminders message",
-          type: "fonts",
-        },
-        newsTitle:  {
-          val: { size: "14", color: "", dark: "", font: "", caps: "" },
-          name: "News item title",
-          type: "fonts",
-        },
-        newsDate:   {
-          val: { size: "14", color: "ffffffcc", dark: "", font: "", caps: "" },
-          name: "News item date",
-          type: "fonts",
-        },
-        largeTemp:   {
-          val: { size: "34", color: "", dark: "", font: "light", caps: "" },
-          name: "Large temperature label",
-          type: "fonts",
-        },
-        smallTemp:   {
-          val: { size: "14", color: "", dark: "", font: "", caps: "" },
-          name: "Most text used in weather items",
-          type: "fonts",
-        },
-        tinyTemp:    {
-          val: { size: "12", color: "", dark: "", font: "", caps: "" },
-          name: "Small text used in weather items",
           type: "fonts",
         },
         customText:  {
@@ -1180,24 +1047,9 @@ const CovidZones = {
           name: "User-defined text items",
           type: "fonts",
         },
-        battery:     {
-          val: { size: "14", color: "", dark: "", font: "medium", caps: "" },
-          name: "Battery percentage",
-          type: "fonts",
-        },
-        sunrise:     {
-          val: { size: "14", color: "", dark: "", font: "medium", caps: "" },
-          name: "Sunrise and sunset",
-          type: "fonts",
-        },
         covid:       {
-          val: { size: "14", color: "", dark: "", font: "medium", caps: "" },
+          val: { size: "15", color: "1aff05", dark: "1aff05", font: "medium", caps: "" },
           name: "COVID data",
-          type: "fonts",
-        },
-        week:        {
-          val: { size: "14", color: "", dark: "", font: "light", caps: "" },
-          name: "Week label",
           type: "fonts",
         },
       },
@@ -1229,141 +1081,6 @@ const CovidZones = {
           name: "Large date format, line 2",
         }, 
       },
-      events: {
-        name: "Events",
-        numberOfEvents: {
-          val: "3",
-          name: "Maximum number of events shown",
-        }, 
-        minutesAfter: {
-          val: "5",
-          name: "Minutes after event begins",
-          description: "Number of minutes after an event begins that it should still be shown.",
-        }, 
-        showAllDay: {
-          val: false,
-          name: "Show all-day events",
-          type: "bool",        
-        },
-        numberOfDays: {
-          val: "1",
-          name: "How many future days of events to show",
-          description: "How many days to show into the future. Set to 0 to show today's events only. The maximum is 7.",
-        }, 
-        labelFormat: {
-          val: "EEEE, MMMM d",
-          name: "Date format for future event days",
-        }, 
-        showTomorrow: {
-          val: "20",
-          name: "Future days shown at hour",
-          description: "The hour (in 24-hour time) to start showing events for tomorrow or beyond. Use 0 for always, 24 for never.",
-        }, 
-        showEventLength: {
-          val: "duration",
-          name: "Event length display style",
-          description: "Choose whether to show the duration, the end time, or no length information.",
-          type: "enum",
-          options: ["duration","time","none"],
-        }, 
-        showLocation: {
-          val: false,
-          name: "Show event location",
-          type: "bool",        
-        },
-        selectCalendars: {
-          val: [],
-          name: "Calendars to show",
-          type: "multiselect",
-          options: await getFromCalendar(),
-        }, 
-        showCalendarColor: {
-          val: "rectangle left",
-          name: "Display calendar color",
-          description: "Choose the shape and location of the calendar color.",
-          type: "enum",
-          options: ["rectangle left","rectangle right","circle left","circle right","none"],
-        }, 
-        noEventBehavior: {
-          val: "message",
-          name: "Show when no events remain",
-          description: "When no events remain, show a hard-coded message, a time-based greeting, or nothing.",
-          type: "enum",
-          options: ["message","greeting","none"],
-        }, 
-        url: {
-          val: "",
-          name: "URL to open when tapped",
-          description: "Optionally provide a URL to open when this item is tapped. Leave blank to open the built-in Calendar app.",
-        }, 
-      },
-      reminders: {
-        name: "Reminders",
-        numberOfReminders: {
-          val: "3",
-          name: "Maximum number of reminders shown",
-        }, 
-        useRelativeDueDate: {
-          val: false,
-          name: "Use relative dates",
-          description: "Set to true for a relative due date (in 3 hours) instead of absolute (3:00 PM).",
-          type: "bool",
-        },
-        showWithoutDueDate: {
-          val: false,
-          name: "Show reminders without a due date",
-          type: "bool",
-        },
-        showOverdue: {
-          val: false,
-          name: "Show overdue reminders",
-          type: "bool",
-        },
-        todayOnly: {
-          val: false,
-          name: "Hide reminders due after today",
-          type: "bool",
-        },
-        selectLists: {
-          val: [],
-          name: "Lists to show",
-          type: "multiselect",
-          options: await getFromCalendar(true),
-        }, 
-        showListColor: {
-          val: "rectangle left",
-          name: "Display list color",
-          description: "Choose the shape and location of the list color.",
-          type: "enum",
-          options: ["rectangle left","rectangle right","circle left","circle right","none"],
-        }, 
-        noRemindersBehavior: {
-          val: "none",
-          name: "Show when no reminders remain",
-          description: "When no reminders remain, show a hard-coded message, a time-based greeting, or nothing.",
-          type: "enum",
-          options: ["message","greeting","none"],
-        }, 
-        url: {
-          val: "",
-          name: "URL to open when tapped",
-          description: "Optionally provide a URL to open when this item is tapped. Leave blank to open the built-in Reminders app.",
-        }, 
-      },
-      sunrise: {
-        name: "Sunrise and sunset",
-        showWithin: {
-          val: "",
-          name: "Limit times displayed",
-          description: "Set how many minutes before/after sunrise or sunset to show this element. Leave blank to always show.",
-        }, 
-        separateElements: {
-          val: false,
-          name: "Use separate sunrise and sunset elements",
-          description: "By default, the sunrise element changes between sunrise and sunset times automatically. Set to true for individual, hard-coded sunrise and sunset elements.",
-          type: "bool",
-        },
-      },
       covid: {
         name: "COVID data",
         Province: {
@@ -1374,6 +1091,11 @@ const CovidZones = {
           val: "1",
           name: "Zone for COVID information",
         },        
+        covidtext: {
+          val: "Cases:{CurrentCaseCount}, Deaths:{CurrentDeaths}, Recoveries:{CurrentRecovered}, Tests:{CurrentTests}",
+          name: "COVID data text",
+          description: "Each {token} is replaced with the number from the data. The available tokens are: cases, todayCases, deaths, todayDeaths, recovered, active, critical, casesPerOneMillion, deathsPerOneMillion, totalTests, testsPerOneMillion"
+        },		
 		url: {
           val: "https://covid19.who.int",
           name: "URL to open when the COVID data is tapped",
@@ -1397,36 +1119,6 @@ const CovidZones = {
           name: "Tint color",
           description: "The hex code color value to tint the symbols. Leave blank for the default tint.",
         }, 
-      },
-      news: {
-        name: "News",
-        url: {
-          val: "http://rss.cnn.com/rss/cnn_topstories.rss",
-          name: "RSS feed link",
-          description: "The RSS feed link for the news to display."
-        }, 
-        numberOfItems: {
-          val: "1",
-          name: "Maximum number of news items shown",
-        }, 
-        limitLineHeight: {
-          val: false,
-          name: "Limit the height of each news item",
-          description: "Set this to true to limit each headline to a single line.",
-          type: "bool",
-        },
-        showDate: {
-          val: "none",
-          name: "Display the publish date for each news item",
-          description: "Use relative (5 minutes ago), date, time, date and time, a custom format, or none.",
-          type: "enum",
-          options: ["relative","date","time","datetime","custom","none"],
-        }, 
-        dateFormat: {
-          val: "H:mm",
-          name: "Date and/or time format for news items",
-          description: 'The format to use if the publish date setting is "formatted".',
-        },
       },
     }
     
@@ -1471,7 +1163,7 @@ if (moduleName == Script.name()) {
       column
     `
     const name = "CovidZones Widget Builder"
-    await CovidZones.runSetup(name, true, "CovidZones code", "https://raw.githubusercontent.com/mzeryck/Weather-Cal/main/weather-cal-code.js")
+    await CovidZones.runSetup(name, true, "CovidZones code", https://raw.githubusercontent.com/miltjef/CovidZones/main/CovidCasesByZoneCode.js")
     const w = await CovidZones.createWidget(layout, name, true)
     w.presentLarge()
     Script.complete()
