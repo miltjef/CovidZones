@@ -33,8 +33,8 @@ const layout = `
  */
 
 // Names of CovidZones elements.
-const codeFilename = "Covid Cases by Zone code"
-const gitHubUrl = "https://raw.githubusercontent.com/miltjef/CovidZones/main/CovidZones-code.js"
+const codeFilename = "CovidCasesByZoneCode"
+const gitHubUrl = "https://raw.githubusercontent.com/miltjef/CovidZones/main/CovidCasesByZoneCode.js"
 
 // Determine if the user is using iCloud.
 let files = FileManager.local()
